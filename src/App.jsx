@@ -3,23 +3,27 @@ import "./App.css";
 import Forecast from "./components/forecast";
 import WeatherInfo from "./components/weatherInfo";
 
+function BackgroundImage(weather) {
+  if (weather.includes("cloud")) {
+    return "url(https://images.pexels.com/photos/531756/pexels-photo-531756.jpeg)"; // URL to cloudy background image
+  } else if (weather.includes("rain")) {
+    return "url(https://images.pexels.com/photos/325676/pexels-photo-325676.jpeg)"; // URL to rainy background image
+  } else {
+    return "url(https://images.pexels.com/photos/531756/pexels-photo-531756.jpeg)"; // Default background image
+  }
+}
+
 export default function App() {
-  const [lat, setLat] = useState([]);
-  const [long, setLong] = useState([]);
   const [forecast, setForecast] = useState([]);
   const [city, setCity] = useState([]);
   const [weatherData, setWeatherData] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = setTimeout(async () => {
       try {
         navigator.geolocation.getCurrentPosition(async function (position) {
           const lat = position.coords.latitude;
           const long = position.coords.longitude;
-
-          console.log("Latitude is:", lat);
-          console.log("Longitude is:", long);
-
           const response = await fetch(
             `https://api.openweathermap.org/data/2.5/weather/?lat=${lat}&lon=${long}&q=${city}&units=metric&appid=39dd8e5ec14e5ea319ff1038f9535b49`
           );
@@ -33,14 +37,28 @@ export default function App() {
           const res = await forecastData.json();
           setForecast(res);
           console.log(res);
+
+          console.log(
+            "weatherData.weather[0].description",
+            data.weather[0].description
+          );
+
+          const backgroundImage = BackgroundImage(
+            data.weather[0].description ?? "cloud"
+          );
+
+          document.documentElement.style.setProperty(
+            "--background-image",
+            backgroundImage
+          );
         });
       } catch (error) {
         console.error(error);
         // Handle error (e.g., display error message to the user)
       }
-    };
+    }, 1000);
 
-    fetchData();
+    return () => clearTimeout(fetchData);
   }, [city]);
 
   const handleInputChange = (e) => {
@@ -49,7 +67,6 @@ export default function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetchData();
   };
 
   return (
